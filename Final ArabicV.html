@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مطلق التعليقات الفضائي</title>
+<style>
+@font-face {
+  font-family: 'Arabixel Basic';
+  src: url('Arabixel Basic/Arabixel Basic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  font-family: 'Arabixel Basic', monospace;
+  font-weight: normal;
+  overflow: hidden;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#gameContainer {
+  position: relative;
+  width: 900px;
+  height: 900px;
+  overflow: hidden;
+  background: #000;
+  direction: ltr;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#introScreen,
+#mainMenu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 900px;
+  z-index: 200;
+  direction: rtl;
+}
+
+#introScreen video,
+#menuVideo {
+  width: 900px;
+  height: 900px;
+  object-fit: cover;
+  display: block;
+}
+
+#introVideo { display: none; }
+#introVideo.playing { display: block; }
+
+#playPrompt {
+  position: absolute;
+  top: 0; left: 0;
+  width: 900px; height: 900px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  z-index: 215;
+}
+
+#playThisBtn, #skipBtn, .menu-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  font-weight: normal;
+  cursor: pointer;
+  padding: 8px 24px;
+  transition: color 0.1s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#playThisBtn:hover, #playThisBtn:active, #playThisBtn.pressed,
+#skipBtn:hover, #skipBtn:active, #skipBtn.pressed,
+.menu-btn:hover, .menu-btn:active, .menu-btn.pressed {
+  color: #85d4ef;
+}
+
+#skipBtn {
+  position: absolute;
+  bottom: 32px;
+  left: 32px;
+  padding: 8px 16px;
+  z-index: 220;
+}
+
+#menuButtons {
+  position: absolute;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  z-index: 210;
+}
+
+#meteorCursor {
+  position: absolute;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 220;
+  display: none;
+  left: 0; top: 0;
+  transform: scaleX(-1);
+  transition: top 0.3s ease;
+}
+
+#starsBg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 900px; height: 900px;
+  object-fit: cover;
+  z-index: 1;
+  display: none;
+}
+
+canvas {
+  display: block;
+  background: transparent;
+  width: 900px; height: 900px;
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 2;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+#gameUI {
+  display: none;
+  position: absolute;
+  top: 0; left: 0;
+  width: 900px; height: 900px;
+  z-index: 10;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+#gameUI.visible { display: block; }
+
+#wordLayer {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 900px;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#wordLayer.active {
+  display: block;
+}
+
+#wordMeasureProbe {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  font-weight: normal;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+.word-sentence {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  padding: 0;
+  color: #acd037;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  font-weight: normal;
+  line-height: 1.2;
+  height: 31px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+  direction: rtl;
+  unicode-bidi: plaintext;
+  text-align: right;
+  pointer-events: none;
+  will-change: transform;
+}
+
+#gameTopBar {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
+  direction: rtl;
+}
+
+.ui-label {
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+#livesSection, #scoreSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+#livesIcons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.life-icon {
+  width: 15.497mm;
+  height: 9.273mm;
+  object-fit: contain;
+  display: block;
+}
+
+#scoreValue {
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  min-width: 40px;
+}
+
+#endScreenLayer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 900px; height: 900px;
+  z-index: 50;
+  display: none;
+}
+
+#endScreenVideo {
+  position: absolute;
+  top: 0; left: 0;
+  width: 900px; height: 900px;
+  object-fit: cover;
+}
+
+#playAgainPanel {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 55;
+  pointer-events: auto;
+  direction: rtl;
+}
+
+#playAgainPanel .panel-title {
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  margin-bottom: 24px;
+}
+
+.choice-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 120px;
+}
+
+.choice-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  font-weight: normal;
+  cursor: pointer;
+  padding: 8px 16px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.choice-btn.active {
+  color: #85d4ef;
+}
+
+#gameBottomBar {
+  position: absolute;
+  bottom: 72px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  box-sizing: border-box;
+  pointer-events: auto;
+  z-index: 15;
+}
+
+.game-corner-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.game-corner-btn img {
+  width: 7mm;
+  height: 7mm;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+}
+
+#pauseOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 900px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  pointer-events: auto;
+}
+
+#pauseOverlay.visible {
+  display: flex;
+}
+
+.pause-box-wrap {
+  position: relative;
+  display: inline-block;
+  width: 400px;
+  max-width: 70%;
+  line-height: 0;
+}
+
+.pause-box-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+  image-rendering: pixelated;
+}
+
+#pauseExitBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  transform: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+  z-index: 2;
+}
+
+#pauseExitBtn img {
+  width: 6mm;
+  height: 6mm;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+}
+
+.pause-box-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: calc(100% - 90px);
+  pointer-events: auto;
+  z-index: 1;
+  direction: rtl;
+}
+
+.pause-box-content .panel-title {
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  margin: 0 0 24px;
+}
+
+.pause-box-content .choice-row {
+  gap: 80px;
+}
+
+#countdownOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 900px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  pointer-events: none;
+}
+
+#countdownText {
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+}
+
+#settingsScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 900px;
+  z-index: 200;
+  background: #000;
+  display: none;
+  direction: rtl;
+}
+
+#settingsScreen.visible {
+  display: block;
+}
+
+#settingsVideo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 900px;
+  object-fit: cover;
+  display: block;
+}
+
+#settingsPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 900px;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.settings-content {
+  width: 620px;
+  max-width: 88%;
+  pointer-events: auto;
+}
+
+#settingsPrompt {
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  font-weight: normal;
+  margin: 0 0 20px;
+  text-align: right;
+  line-height: 1.4;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+.settings-box-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 300px;
+  line-height: 0;
+}
+
+.settings-box-bg {
+  width: 100%;
+  height: 300px;
+  display: block;
+  image-rendering: pixelated;
+  object-fit: fill;
+}
+
+#customSentencesInput {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: 'Arabixel Basic', monospace;
+  font-size: 18pt;
+  font-weight: normal;
+  resize: none;
+  outline: none;
+  line-height: 1.6;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  tab-size: 4;
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+#customSentencesInput::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.settings-action-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.settings-action-btn img {
+  height: 28px;
+  width: auto;
+  image-rendering: pixelated;
+  display: block;
+}
+</style>
+</head>
+<body>
+
+<div id="gameContainer">
+
+  <div id="introScreen">
+    <div id="playPrompt">
+      <button id="playThisBtn" type="button">شغّل هاد!</button>
+    </div>
+    <video id="introVideo" src="AR.mp4" playsinline preload="auto"></video>
+    <button id="skipBtn" class="hidden" type="button">تخطى هاد</button>
+  </div>
+
+  <div id="mainMenu" class="hidden">
+    <video id="menuVideo" src="Menu Motion.mp4" loop muted playsinline preload="auto"></video>
+    <video id="meteorCursor" src="Meteor Horizontal.mov" autoplay loop muted playsinline></video>
+    <div id="menuButtons">
+      <button id="menuStartBtn" class="menu-btn" type="button">إبدأ</button>
+      <button id="menuSettingsBtn" class="menu-btn" type="button">الإعدادات</button>
+    </div>
+  </div>
+
+  <div id="settingsScreen">
+    <video id="settingsVideo" src="Settings.mov" loop muted playsinline preload="auto"></video>
+    <div id="settingsPanel">
+      <div class="settings-content">
+        <p id="settingsPrompt">أدخل جملك واضغط حفظ</p>
+        <div class="settings-box-wrap">
+          <img class="settings-box-bg" src="Box2.png" alt="">
+          <textarea id="customSentencesInput" placeholder="جملة واحدة في كل سطر..." spellcheck="false"></textarea>
+        </div>
+        <div class="settings-actions">
+          <button id="settingsSaveBtn" class="settings-action-btn" type="button">
+            <img id="settingsSaveBtnImg" src="ARWhite Save.png" alt="حفظ">
+          </button>
+          <button id="settingsGoBackBtn" class="settings-action-btn" type="button">
+            <img id="settingsGoBackBtnImg" src="ARGo back White.png" alt="رجوع">
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <video id="starsBg" src="Stars BG Comp.mp4" loop muted playsinline preload="auto"></video>
+
+  <div id="gameUI">
+    <div id="gameTopBar">
+      <div id="livesSection">
+        <span class="ui-label">محاولة</span>
+        <div id="livesIcons">
+          <img class="life-icon" src="ARLives.png" alt="">
+          <img class="life-icon" src="ARLives.png" alt="">
+          <img class="life-icon" src="ARLives.png" alt="">
+        </div>
+      </div>
+      <div id="scoreSection">
+        <span class="ui-label">نقاط</span>
+        <span id="scoreValue">0</span>
+      </div>
+    </div>
+    <div id="gameBottomBar">
+      <button id="musicBtn" class="game-corner-btn" type="button">
+        <img id="musicBtnImg" src="Music On.png" alt="موسيقى">
+      </button>
+      <button id="pauseBtn" class="game-corner-btn" type="button">
+        <img id="pauseBtnImg" src="White Option Button.png" alt="إيقاف">
+      </button>
+    </div>
+  </div>
+
+  <div id="pauseOverlay">
+    <div class="pause-box-wrap">
+      <img class="pause-box-bg" src="Box.png" alt="">
+      <button id="pauseExitBtn" type="button">
+        <img id="pauseExitBtnImg" src="White Exit Button.png" alt="خروج">
+      </button>
+      <div class="pause-box-content">
+        <div class="panel-title">خروج؟</div>
+        <div class="choice-row">
+          <button class="choice-btn" id="pauseYesBtn" type="button">نعم</button>
+          <button class="choice-btn" id="pauseNoBtn" type="button">لا</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="countdownOverlay">
+    <span id="countdownText"></span>
+  </div>
+
+  <div id="endScreenLayer">
+    <video id="endScreenVideo" playsinline preload="auto" loop muted></video>
+    <div id="playAgainPanel">
+      <div class="panel-title" id="playAgainTitle">تلعب مجدداً؟</div>
+      <div class="choice-row">
+        <button class="choice-btn" id="playAgainYes" type="button">نعم</button>
+        <button class="choice-btn" id="playAgainNo" type="button">لا</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+  <div id="wordLayer" aria-hidden="true">
+    <span id="wordMeasureProbe"></span>
+  </div>
+
+</div>
+
+<video id="shipVideo" loop muted playsinline preload="auto" style="display:none"></video>
+<video id="shipDestroyedVideo" muted playsinline preload="auto" style="display:none"></video>
+
+<script>
+const GAME_WIDTH = 900;
+const GAME_HEIGHT = 900;
+const WIN_SCORE = 1000;
+const POINTS_PER_HIT = 50;
+const MAX_LIVES = 3;
+const RESPAWN_MS = 10000;
+const ACTIVE_COLOR = '#85d4ef';
+const GAME_OVER_VIDEO = 'Game Over Arabic Comp.mp4';
+const CONGRATS_VIDEO = 'Arabic Congrats Comp.mp4';
+const SHIP_VIDEO = 'Arabic SpaceShip.mov';
+const SHIP_DESTROYED_VIDEO = 'Arabic SpaceShip Destroyed.mov';
+
+function mmToPx(mm) {
+  return mm * (96 / 25.4);
+}
+
+const SHIP_W = mmToPx(27.307) * 1.65;
+const SHIP_H = mmToPx(27.539) * 1.65;
+const BULLET_W = mmToPx(0.602);
+const BULLET_H = mmToPx(1.805);
+const BULLET_COLOR = '#97d8e1';
+const SENTENCE_COLOR = '#acd037';
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = GAME_WIDTH;
+canvas.height = GAME_HEIGHT;
+const wordLayer = document.getElementById('wordLayer');
+const wordMeasureProbe = document.getElementById('wordMeasureProbe');
+
+const introScreen = document.getElementById('introScreen');
+const introVideo = document.getElementById('introVideo');
+const playPrompt = document.getElementById('playPrompt');
+const playThisBtn = document.getElementById('playThisBtn');
+const mainMenu = document.getElementById('mainMenu');
+const settingsScreen = document.getElementById('settingsScreen');
+const settingsVideo = document.getElementById('settingsVideo');
+const customSentencesInput = document.getElementById('customSentencesInput');
+const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+const settingsSaveBtnImg = document.getElementById('settingsSaveBtnImg');
+const settingsGoBackBtn = document.getElementById('settingsGoBackBtn');
+const settingsGoBackBtnImg = document.getElementById('settingsGoBackBtnImg');
+const menuVideo = document.getElementById('menuVideo');
+const gameUI = document.getElementById('gameUI');
+const skipBtn = document.getElementById('skipBtn');
+const starsBg = document.getElementById('starsBg');
+const endScreenLayer = document.getElementById('endScreenLayer');
+const endScreenVideo = document.getElementById('endScreenVideo');
+const scoreValue = document.getElementById('scoreValue');
+const lifeIcons = document.querySelectorAll('.life-icon');
+const shipVideo = document.getElementById('shipVideo');
+const shipDestroyedVideo = document.getElementById('shipDestroyedVideo');
+const playAgainYes = document.getElementById('playAgainYes');
+const playAgainNo = document.getElementById('playAgainNo');
+const playAgainTitle = document.getElementById('playAgainTitle');
+const musicBtn = document.getElementById('musicBtn');
+const musicBtnImg = document.getElementById('musicBtnImg');
+const pauseBtn = document.getElementById('pauseBtn');
+const pauseBtnImg = document.getElementById('pauseBtnImg');
+const pauseOverlay = document.getElementById('pauseOverlay');
+const pauseExitBtn = document.getElementById('pauseExitBtn');
+const pauseExitBtnImg = document.getElementById('pauseExitBtnImg');
+const pauseYesBtn = document.getElementById('pauseYesBtn');
+const pauseNoBtn = document.getElementById('pauseNoBtn');
+const countdownOverlay = document.getElementById('countdownOverlay');
+const countdownText = document.getElementById('countdownText');
+
+const clickSound = new Audio('Interface_Click.mp3');
+clickSound.preload = 'auto';
+const laserSound = new Audio('Laser Gun Sound.mp3');
+const gameMusic = new Audio('Vangelis  Blade Runner (End Titles)  Soundtrack - James Miller.mp3');
+const victorSound = new Audio('Victor.mp3');
+const youLoseSound = new Audio('You lose.mp3');
+gameMusic.loop = true;
+victorSound.loop = true;
+youLoseSound.loop = true;
+
+let endScreenMode = null;
+let pendingGameOver = false;
+let respawnTimer = null;
+let countdownTimer = null;
+let pauseDialogOpen = false;
+let musicMuted = false;
+
+function playClickSound() {
+  const sound = new Audio('Interface_Click.mp3');
+  sound.volume = clickSound.volume;
+  sound.play().catch(() => {});
+}
+
+function playLaserSound() {
+  laserSound.currentTime = 0;
+  laserSound.play().catch(() => {});
+}
+
+function applyVolumes() {
+  const musicVol = musicMuted ? 0 : 1;
+  gameMusic.volume = musicVol;
+  laserSound.volume = 1;
+  clickSound.volume = 1;
+  victorSound.volume = 1;
+  youLoseSound.volume = 1;
+}
+
+applyVolumes();
+
+function bindPressImage(btn, img, whiteSrc, blueSrc) {
+  btn.addEventListener('mousedown', () => { img.src = blueSrc; });
+  btn.addEventListener('mouseup', () => { img.src = whiteSrc; });
+  btn.addEventListener('mouseleave', () => { img.src = whiteSrc; });
+  btn.addEventListener('touchstart', (e) => { e.preventDefault(); img.src = blueSrc; }, { passive: false });
+  btn.addEventListener('touchend', () => { img.src = whiteSrc; });
+}
+
+function stopShipMedia() {
+  shipVideo.pause();
+  shipDestroyedVideo.pause();
+}
+
+function initShipVideos() {
+  shipVideo.src = SHIP_VIDEO;
+  shipVideo.loop = true;
+  shipVideo.muted = true;
+  shipVideo.playsInline = true;
+  shipDestroyedVideo.src = SHIP_DESTROYED_VIDEO;
+  shipDestroyedVideo.muted = true;
+  shipDestroyedVideo.playsInline = true;
+  shipVideo.load();
+  shipDestroyedVideo.load();
+}
+
+function startShipVideo({ reload = false } = {}) {
+  player.destroyed = false;
+  shipDestroyedVideo.pause();
+  shipDestroyedVideo.currentTime = 0;
+  shipVideo.pause();
+  shipVideo.currentTime = 0;
+
+  const play = () => {
+    shipVideo.play().catch(() => {});
+  };
+
+  if (reload) {
+    shipVideo.src = SHIP_VIDEO;
+    play();
+    shipVideo.load();
+    shipVideo.addEventListener('canplay', play, { once: true });
+    return;
+  }
+
+  if (shipVideo.readyState >= 2) {
+    play();
+    return;
+  }
+
+  shipVideo.addEventListener('canplay', play, { once: true });
+  shipVideo.load();
+}
+
+function playShipDestroyedVideo() {
+  shipVideo.pause();
+  shipDestroyedVideo.pause();
+  shipDestroyedVideo.currentTime = 0;
+
+  const play = () => {
+    shipDestroyedVideo.play().catch(() => {});
+  };
+
+  if (shipDestroyedVideo.readyState >= 2) {
+    play();
+    return;
+  }
+
+  shipDestroyedVideo.src = SHIP_DESTROYED_VIDEO;
+  shipDestroyedVideo.load();
+  shipDestroyedVideo.addEventListener('canplay', play, { once: true });
+}
+
+function releaseEndScreenVideo() {
+  endScreenVideo.pause();
+  endScreenVideo.currentTime = 0;
+  if (endScreenVideo.src || endScreenVideo.getAttribute('src')) {
+    endScreenVideo.removeAttribute('src');
+    endScreenVideo.load();
+  }
+}
+
+function ensureShipMedia() {
+  if (!gameRunning || endScreenMode) return;
+  if (gamePaused && !pendingGameOver) return;
+  if (player.destroyed) {
+    shipVideo.pause();
+    if (shipDestroyedVideo.paused) {
+      shipDestroyedVideo.play().catch(() => {});
+    }
+  } else {
+    shipDestroyedVideo.pause();
+    if (shipVideo.paused) {
+      shipVideo.play().catch(() => {});
+    }
+  }
+}
+
+function pauseGameFully() {
+  gamePaused = true;
+  starsBg.pause();
+  stopShipMedia();
+  if (!musicMuted) gameMusic.pause();
+}
+
+function resumeGameMedia() {
+  if (endScreenMode || !gameRunning || pendingGameOver) return;
+  starsBg.play().catch(() => {});
+  if (!musicMuted) gameMusic.play().catch(() => {});
+  ensureShipMedia();
+}
+
+function resetPauseDialogButtons() {
+  pauseBtnImg.src = 'White Option Button.png';
+  pauseExitBtnImg.src = 'White Exit Button.png';
+  pauseYesBtn.classList.remove('active');
+  pauseNoBtn.classList.remove('active');
+  pauseYesBtn.style.color = '#ffffff';
+  pauseNoBtn.style.color = '#ffffff';
+}
+
+function closePauseDialog() {
+  pauseDialogOpen = false;
+  pauseOverlay.classList.remove('visible');
+  resetPauseDialogButtons();
+  runCountdownResume();
+}
+
+function showPauseDialog() {
+  if (!gameRunning || endScreenMode || pauseDialogOpen) return;
+  pauseDialogOpen = true;
+  pauseGameFully();
+  pauseOverlay.classList.add('visible');
+  pauseBtnImg.src = 'Blue Option Button.png';
+}
+
+function runCountdownResume() {
+  if (endScreenMode || !gameRunning) return;
+  let count = 3;
+  countdownOverlay.style.display = 'flex';
+  countdownText.textContent = String(count);
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    count--;
+    if (count > 0) {
+      countdownText.textContent = String(count);
+    } else {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+      countdownOverlay.style.display = 'none';
+      gamePaused = false;
+      resumeGameMedia();
+    }
+  }, 1000);
+}
+
+musicBtn.addEventListener('click', () => {
+  playClickSound();
+  musicMuted = !musicMuted;
+  musicBtnImg.src = musicMuted ? 'Music Off.png' : 'Music On.png';
+  if (musicMuted) {
+    gameMusic.pause();
+  } else if (gameRunning && !gamePaused && !endScreenMode) {
+    gameMusic.play().catch(() => {});
+  }
+  applyVolumes();
+});
+
+bindPressImage(pauseExitBtn, pauseExitBtnImg, 'White Exit Button.png', 'Blue Exit Button.png');
+
+pauseBtn.addEventListener('mousedown', () => { pauseBtnImg.src = 'Blue Option Button.png'; });
+pauseBtn.addEventListener('mouseup', () => { if (!pauseDialogOpen) pauseBtnImg.src = 'White Option Button.png'; });
+pauseBtn.addEventListener('mouseleave', () => { if (!pauseDialogOpen) pauseBtnImg.src = 'White Option Button.png'; });
+pauseBtn.addEventListener('touchstart', (e) => { e.preventDefault(); pauseBtnImg.src = 'Blue Option Button.png'; }, { passive: false });
+pauseBtn.addEventListener('touchend', () => { if (!pauseDialogOpen) pauseBtnImg.src = 'White Option Button.png'; });
+
+pauseBtn.addEventListener('click', () => {
+  playClickSound();
+  if (pauseDialogOpen) return;
+  showPauseDialog();
+});
+
+pauseExitBtn.addEventListener('click', () => {
+  playClickSound();
+  closePauseDialog();
+});
+
+setupChoiceButton(pauseYesBtn, () => {
+  pauseDialogOpen = false;
+  pauseOverlay.classList.remove('visible');
+  resetPauseDialogButtons();
+  showMainMenu();
+});
+
+setupChoiceButton(pauseNoBtn, () => {
+  closePauseDialog();
+});
+
+function setupChoiceButton(btn, onChoose) {
+  const activate = () => {
+    btn.classList.add('active');
+    btn.style.color = ACTIVE_COLOR;
+  };
+  const deactivate = () => {
+    btn.classList.remove('active');
+    btn.style.color = '#ffffff';
+  };
+
+  btn.addEventListener('mousedown', activate);
+  btn.addEventListener('mouseup', deactivate);
+  btn.addEventListener('mouseleave', deactivate);
+  btn.addEventListener('touchstart', (e) => { e.preventDefault(); activate(); }, { passive: false });
+  btn.addEventListener('touchend', deactivate);
+  btn.addEventListener('click', () => {
+    playClickSound();
+    onChoose();
+  });
+}
+
+function startIntroVideo() {
+  playPrompt.classList.add('hidden');
+  introVideo.classList.add('playing');
+  skipBtn.classList.remove('hidden');
+  introVideo.muted = false;
+  introVideo.volume = 1;
+  introVideo.play().catch(() => {});
+}
+
+const meteorCursor = document.getElementById('meteorCursor');
+const menuStartBtn = document.getElementById('menuStartBtn');
+const menuSettingsBtn = document.getElementById('menuSettingsBtn');
+const METEOR_ASPECT = 12.948 / 5.847;
+
+function positionMeteorCursor(targetBtn) {
+  const btn = targetBtn || menuStartBtn;
+  const btnRect = btn.getBoundingClientRect();
+  const anchorRect = menuStartBtn.getBoundingClientRect();
+  const containerRect = document.getElementById('gameContainer').getBoundingClientRect();
+  const meteorHeight = btnRect.height;
+  const meteorWidth = meteorHeight * METEOR_ASPECT;
+  meteorCursor.style.height = `${meteorHeight}px`;
+  meteorCursor.style.width = `${meteorWidth}px`;
+  meteorCursor.style.left = `${anchorRect.right - containerRect.left + 12}px`;
+  meteorCursor.style.top = `${btnRect.top - containerRect.top}px`;
+}
+
+function showMainMenu() {
+  stopAllGameMedia();
+  hideEndScreen();
+  pendingGameOver = false;
+  pauseDialogOpen = false;
+  pauseOverlay.classList.remove('visible');
+  resetPauseDialogButtons();
+  countdownOverlay.style.display = 'none';
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  bullets = [];
+  clearAllWords();
+  score = 0;
+  lives = MAX_LIVES;
+  player.destroyed = false;
+  introVideo.pause();
+  introScreen.classList.add('hidden');
+  settingsScreen.classList.remove('visible');
+  settingsVideo.pause();
+  mainMenu.classList.remove('hidden');
+  gameUI.classList.remove('visible');
+  wordLayer.classList.remove('active');
+  starsBg.style.display = 'none';
+  starsBg.pause();
+  canvas.style.display = 'block';
+  canvas.style.visibility = 'visible';
+  menuVideo.play().catch(() => {});
+  meteorCursor.style.display = 'block';
+  meteorCursor.play().catch(() => {});
+  requestAnimationFrame(() => positionMeteorCursor(menuStartBtn));
+}
+
+function stopAllGameMedia() {
+  gameRunning = false;
+  gamePaused = false;
+  pendingGameOver = false;
+  stopShipMedia();
+  gameMusic.pause();
+  victorSound.pause();
+  youLoseSound.pause();
+  endScreenVideo.pause();
+  if (respawnTimer) { clearTimeout(respawnTimer); respawnTimer = null; }
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+}
+
+menuStartBtn.addEventListener('mouseenter', () => positionMeteorCursor(menuStartBtn));
+menuSettingsBtn.addEventListener('mouseenter', () => positionMeteorCursor(menuSettingsBtn));
+introVideo.addEventListener('ended', showMainMenu);
+
+function setupInteractiveButton(btn) {
+  const press = () => btn.classList.add('pressed');
+  const release = () => btn.classList.remove('pressed');
+  btn.addEventListener('mousedown', press);
+  btn.addEventListener('mouseup', release);
+  btn.addEventListener('mouseleave', release);
+  btn.addEventListener('touchstart', (e) => { e.preventDefault(); press(); }, { passive: false });
+  btn.addEventListener('touchend', release);
+  btn.addEventListener('touchcancel', release);
+}
+
+setupInteractiveButton(menuStartBtn);
+setupInteractiveButton(menuSettingsBtn);
+setupInteractiveButton(skipBtn);
+setupInteractiveButton(playThisBtn);
+
+playThisBtn.addEventListener('click', () => { playClickSound(); startIntroVideo(); });
+skipBtn.addEventListener('click', () => { playClickSound(); showMainMenu(); });
+
+menuStartBtn.addEventListener('click', () => {
+  playClickSound();
+  mainMenu.classList.add('hidden');
+  menuVideo.pause();
+  meteorCursor.style.display = 'none';
+  meteorCursor.pause();
+  gameUI.classList.add('visible');
+  starsBg.style.display = 'block';
+  starsBg.play().catch(() => {});
+  gameMusic.currentTime = 0;
+  musicMuted = false;
+  musicBtnImg.src = 'Music On.png';
+  gameMusic.play().catch(() => {});
+  startGame();
+});
+
+menuSettingsBtn.addEventListener('click', () => {
+  playClickSound();
+  showSettingsScreen();
+});
+
+const SENTENCE_FONT = '18pt "Arabixel Basic", monospace';
+
+function removeWordElement(word) {
+  if (word.el) {
+    word.el.remove();
+    word.el = null;
+  }
+}
+
+function clearAllWords() {
+  words.forEach(removeWordElement);
+  words = [];
+}
+
+function measureSentence(text) {
+  wordMeasureProbe.textContent = text;
+  return { width: wordMeasureProbe.offsetWidth, height: wordMeasureProbe.offsetHeight };
+}
+
+function createWordElement(text) {
+  const el = document.createElement('div');
+  el.className = 'word-sentence';
+  el.textContent = text;
+  wordLayer.appendChild(el);
+  return el;
+}
+
+function syncWordElements() {
+  words.forEach((word) => {
+    if (!word.el) return;
+    if (word.glitching) {
+      const shake = 8;
+      const offsetX = (Math.random() - 0.5) * shake;
+      const offsetY = (Math.random() - 0.5) * shake;
+      word.el.style.transform = `translate(${word.x + offsetX}px, ${word.y + offsetY}px)`;
+      word.el.style.opacity = String(0.4 + Math.random() * 0.6);
+      word.el.style.color = Math.random() > 0.5 ? '#ffffff' : SENTENCE_COLOR;
+    } else {
+      word.el.style.transform = `translate(${word.x}px, ${word.y}px)`;
+      word.el.style.opacity = '1';
+      word.el.style.color = SENTENCE_COLOR;
+    }
+  });
+}
+
+const DEFAULT_COMMENTS = [
+  "متى رح تتزوّج؟",
+  "ليش ما اتزوجت بعد؟",
+  "عم تكبر",
+  "ابن عمّك درس طب",
+  "ليش ما بتكون متلن؟",
+  "لازم تتزوج",
+  "عندك أولاد؟",
+  "قدّيش راتبك؟",
+  "لسّا عازب؟",
+  "انت كتير انتقائي",
+  "وقتك عم يمشي",
+  "ليش ما عندك حبيبة؟",
+  "بتقضي وقت كتير بالشغل",
+  "لازم تلاقي شغل حقيقي",
+  "متى رح تكبر؟",
+  "هاد مش شغل حقيقي",
+  "رح تندم بعدين",
+  "انت كتير طموح",
+  "متى الفرح؟",
+  "لازم تنحف شوي",
+  "هاد غالي عليك",
+  "ليش عم تنتقل؟",
+  "هاد فكرة سيئة",
+  "لازم تسمع كلامي",
+  "متى رح يكون عندك أولاد؟",
+  "كيفك؟",
+  "ابن خالتك عم يدرس طب",
+  "وين رحت بالعطلة؟",
+  "شو في جديد؟",
+  "وين كنت؟",
+  "ليش ما عم تحكي؟",
+  "ما منشوفك أبداً",
+  "كل يلي بعمرك متجوزين"
+];
+
+let comments = [...DEFAULT_COMMENTS];
+const CUSTOM_COMMENTS_KEY = 'spaceShooterCustomComments';
+
+function loadSavedComments() {
+  try {
+    const saved = localStorage.getItem(CUSTOM_COMMENTS_KEY);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed) && parsed.length > 0) comments = parsed;
+  } catch (e) {}
+}
+
+function populateSettingsTextarea() {
+  customSentencesInput.value = comments.join('\n');
+}
+
+function saveCustomSentences() {
+  const lines = customSentencesInput.value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length > 0) {
+    comments = lines;
+    localStorage.setItem(CUSTOM_COMMENTS_KEY, JSON.stringify(lines));
+  } else {
+    comments = [...DEFAULT_COMMENTS];
+    localStorage.removeItem(CUSTOM_COMMENTS_KEY);
+  }
+}
+
+function showSettingsScreen() {
+  mainMenu.classList.add('hidden');
+  menuVideo.pause();
+  meteorCursor.style.display = 'none';
+  meteorCursor.pause();
+  populateSettingsTextarea();
+  settingsScreen.classList.add('visible');
+  settingsVideo.currentTime = 0;
+  settingsVideo.play().catch(() => {});
+}
+
+function returnToMainMenuFromSettings() {
+  customSentencesInput.blur();
+  settingsScreen.classList.remove('visible');
+  settingsVideo.pause();
+  mainMenu.classList.remove('hidden');
+  menuVideo.play().catch(() => {});
+  meteorCursor.style.display = 'block';
+  meteorCursor.play().catch(() => {});
+  requestAnimationFrame(() => positionMeteorCursor(menuStartBtn));
+}
+
+bindPressImage(settingsSaveBtn, settingsSaveBtnImg, 'ARWhite Save.png', 'ARBlue Save.png');
+bindPressImage(settingsGoBackBtn, settingsGoBackBtnImg, 'ARGo back White.png', 'ARGo back Blue.png');
+
+settingsSaveBtn.addEventListener('click', () => {
+  playClickSound();
+  saveCustomSentences();
+});
+
+settingsGoBackBtn.addEventListener('click', () => {
+  playClickSound();
+  returnToMainMenuFromSettings();
+});
+
+loadSavedComments();
+
+const player = {
+  x: GAME_WIDTH / 2 - SHIP_W / 2,
+  y: GAME_HEIGHT - SHIP_H - 40,
+  width: SHIP_W,
+  height: SHIP_H,
+  speed: 7,
+  destroyed: false
+};
+
+let bullets = [];
+let words = [];
+let score = 0;
+let lives = MAX_LIVES;
+let gameRunning = false;
+let wordSpawnRate = 0;
+let gamePaused = false;
+const keys = {};
+
+function isTypingInField() {
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === 'TEXTAREA' || tag === 'INPUT' || el.isContentEditable;
+}
+
+window.addEventListener('keydown', (e) => {
+  keys[e.key] = true;
+  const isSpace = e.key === ' ' || e.code === 'Space';
+  if (!isSpace) return;
+
+  if (settingsScreen.classList.contains('visible') && isTypingInField()) {
+    return;
+  }
+
+  if (gameRunning && !gamePaused && !endScreenMode) {
+    e.preventDefault();
+    shootBullet();
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  keys[e.key] = false;
+});
+
+function shootBullet() {
+  if (!gameRunning || player.destroyed || gamePaused || endScreenMode) return;
+  playLaserSound();
+  bullets.push({
+    x: player.x + player.width / 2 - BULLET_W / 2,
+    y: player.y - BULLET_H,
+    width: BULLET_W,
+    height: BULLET_H,
+    speed: 10
+  });
+}
+
+function spawnWord() {
+  const comment = comments[Math.floor(Math.random() * comments.length)];
+  const size = measureSentence(comment);
+  const speed = 1.5 + Math.random() * 1.5;
+  const direction = Math.floor(Math.random() * 4);
+  const word = {
+    text: comment,
+    width: size.width,
+    height: size.height,
+    speed,
+    direction,
+    vx: 0,
+    vy: 0,
+    prevX: 0,
+    prevY: 0,
+    glitching: false,
+    glitchFrame: 0,
+    el: createWordElement(comment)
+  };
+
+  const margin = 60;
+  switch (direction) {
+    case 0:
+      word.x = margin + Math.random() * (GAME_WIDTH - size.width - margin * 2);
+      word.y = -size.height;
+      word.vx = (Math.random() - 0.5) * 1.2;
+      word.vy = speed;
+      break;
+    case 1:
+      word.x = GAME_WIDTH + 10;
+      word.y = margin + Math.random() * (GAME_HEIGHT - size.height - margin * 2);
+      word.vx = -speed;
+      word.vy = (Math.random() - 0.5) * 1.2;
+      break;
+    case 2:
+      word.x = margin + Math.random() * (GAME_WIDTH - size.width - margin * 2);
+      word.y = GAME_HEIGHT + 10;
+      word.vx = (Math.random() - 0.5) * 1.2;
+      word.vy = -speed;
+      break;
+    case 3:
+      word.x = -size.width - 10;
+      word.y = margin + Math.random() * (GAME_HEIGHT - size.height - margin * 2);
+      word.vx = speed;
+      word.vy = (Math.random() - 0.5) * 1.2;
+      break;
+  }
+  word.prevX = word.x;
+  word.prevY = word.y;
+  words.push(word);
+}
+
+function updateLivesDisplay() {
+  lifeIcons.forEach((icon, i) => {
+    icon.src = i < lives ? 'ARLives.png' : 'ArLose.png';
+  });
+}
+
+function updateScoreDisplay() {
+  scoreValue.textContent = String(score);
+}
+
+function getWordHitbox(word) {
+  return {
+    x: word.x,
+    y: word.y + word.height / 2 - word.height / 2,
+    width: word.width,
+    height: word.height
+  };
+}
+
+function getShipHitbox() {
+  const insetX = player.width * 0.28;
+  const insetY = player.height * 0.22;
+  return {
+    x: player.x + insetX,
+    y: player.y + insetY,
+    width: player.width - insetX * 2,
+    height: player.height - insetY * 2
+  };
+}
+
+function rectsOverlap(a, b) {
+  return a.x < b.x + b.width &&
+         a.x + a.width > b.x &&
+         a.y < b.y + b.height &&
+         a.y + a.height > b.y;
+}
+
+function segmentIntersectsRect(x0, y0, x1, y1, rect) {
+  const steps = 12;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const px = x0 + (x1 - x0) * t;
+    const py = y0 + (y1 - y0) * t;
+    if (px >= rect.x && px <= rect.x + rect.width &&
+        py >= rect.y && py <= rect.y + rect.height) {
+      return true;
+    }
+  }
+  return rectsOverlap({ x: x1, y: y1, width: 1, height: 1 }, rect);
+}
+
+function wordHitsShip(word) {
+  const ship = getShipHitbox();
+  const wordBox = getWordHitbox(word);
+  const prevBox = {
+    x: word.prevX,
+    y: word.prevY + word.height / 2 - word.height / 2,
+    width: word.width,
+    height: word.height
+  };
+
+  if (rectsOverlap(wordBox, ship)) return true;
+
+  const samples = [
+    [prevBox.x, prevBox.y + prevBox.height / 2],
+    [prevBox.x + prevBox.width, prevBox.y + prevBox.height / 2],
+    [wordBox.x, wordBox.y + wordBox.height / 2],
+    [wordBox.x + wordBox.width, wordBox.y + wordBox.height / 2],
+    [prevBox.x + prevBox.width / 2, prevBox.y + prevBox.height / 2],
+    [wordBox.x + wordBox.width / 2, wordBox.y + wordBox.height / 2]
+  ];
+
+  for (let i = 0; i < samples.length - 1; i++) {
+    if (segmentIntersectsRect(
+      samples[i][0], samples[i][1],
+      samples[i + 1][0], samples[i + 1][1],
+      ship
+    )) return true;
+  }
+
+  return false;
+}
+
+function triggerShipDestroyed() {
+  if (player.destroyed || !gameRunning || endScreenMode || pendingGameOver) return;
+  player.destroyed = true;
+  playShipDestroyedVideo();
+  lives--;
+  updateLivesDisplay();
+
+  if (lives <= 0) {
+    if (respawnTimer) { clearTimeout(respawnTimer); respawnTimer = null; }
+    bullets = [];
+    clearAllWords();
+    showGameOver();
+    return;
+  }
+
+  if (respawnTimer) clearTimeout(respawnTimer);
+  respawnTimer = setTimeout(() => {
+    if (gameRunning && lives > 0 && !endScreenMode && !pendingGameOver) {
+      startShipVideo();
+    }
+    respawnTimer = null;
+  }, RESPAWN_MS);
+}
+
+function hideEndScreen() {
+  endScreenMode = null;
+  endScreenLayer.style.display = 'none';
+  releaseEndScreenVideo();
+  victorSound.pause();
+  youLoseSound.pause();
+  playAgainYes.classList.remove('active');
+  playAgainNo.classList.remove('active');
+  playAgainYes.style.color = '#ffffff';
+  playAgainNo.style.color = '#ffffff';
+}
+
+function playEndScreenVideo(src) {
+  endScreenVideo.loop = true;
+  endScreenVideo.muted = true;
+  endScreenVideo.playsInline = true;
+  if (endScreenVideo.getAttribute('src') !== src) {
+    endScreenVideo.src = src;
+  }
+  endScreenVideo.load();
+  endScreenVideo.currentTime = 0;
+  endScreenVideo.play().catch(() => {});
+}
+
+endScreenVideo.addEventListener('ended', () => {
+  if (endScreenLayer.style.display !== 'block' || !endScreenMode) return;
+  endScreenVideo.currentTime = 0;
+  endScreenVideo.play().catch(() => {});
+});
+
+function showEndScreen(type) {
+  endScreenMode = type;
+  gameRunning = false;
+  gamePaused = true;
+  pendingGameOver = false;
+  pauseDialogOpen = false;
+  pauseOverlay.classList.remove('visible');
+  resetPauseDialogButtons();
+  gameMusic.pause();
+  stopShipMedia();
+  clearAllWords();
+  ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  const isWin = type === 'win';
+  playAgainTitle.textContent = isWin ? 'العب مرة أخرى' : 'حاول مرة اخرى';
+  endScreenLayer.style.display = 'block';
+  playEndScreenVideo(isWin ? CONGRATS_VIDEO : GAME_OVER_VIDEO);
+
+  const stinger = isWin ? victorSound : youLoseSound;
+  stinger.currentTime = 0;
+  stinger.play().catch(() => {});
+}
+
+function showGameOver() {
+  showEndScreen('lose');
+}
+
+function checkWin() {
+  if (score >= WIN_SCORE) {
+    bullets = [];
+    clearAllWords();
+    stopShipMedia();
+    showEndScreen('win');
+  }
+}
+
+function restartFromEndScreen() {
+  hideEndScreen();
+  pendingGameOver = false;
+  bullets = [];
+  clearAllWords();
+  wordSpawnRate = 0;
+  if (respawnTimer) { clearTimeout(respawnTimer); respawnTimer = null; }
+  starsBg.style.display = 'block';
+  startGame({ reloadShip: true });
+  starsBg.play().catch(() => {});
+  if (!musicMuted) {
+    gameMusic.currentTime = 0;
+    gameMusic.play().catch(() => {});
+  }
+}
+
+setupChoiceButton(playAgainYes, () => restartFromEndScreen());
+setupChoiceButton(playAgainNo, () => showMainMenu());
+
+function drawPlayer() {
+  if (player.destroyed) {
+    if (shipDestroyedVideo.readyState >= 2) {
+      ctx.drawImage(shipDestroyedVideo, player.x, player.y, player.width, player.height);
+    }
+    return;
+  }
+
+  if (shipVideo.readyState >= 2) {
+    ctx.drawImage(shipVideo, player.x, player.y, player.width, player.height);
+    return;
+  }
+
+  if (gameRunning && !endScreenMode && shipVideo.paused) {
+    shipVideo.play().catch(() => {});
+  }
+}
+
+function drawBullets() {
+  bullets.forEach((bullet) => {
+    ctx.fillStyle = BULLET_COLOR;
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  });
+}
+
+function isWordOffScreen(word) {
+  return word.x + word.width < -80 ||
+         word.x > GAME_WIDTH + 80 ||
+         word.y + word.height < -80 ||
+         word.y > GAME_HEIGHT + 80;
+}
+
+function update() {
+  if (!gameRunning || gamePaused || endScreenMode || pendingGameOver) return;
+
+  if (!player.destroyed) {
+    if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.x -= player.speed;
+    if (keys['ArrowRight'] || keys['d'] || keys['D']) player.x += player.speed;
+    if (keys['ArrowUp'] || keys['w'] || keys['W']) player.y -= player.speed;
+    if (keys['ArrowDown'] || keys['s'] || keys['S']) player.y += player.speed;
+    player.x = Math.max(0, Math.min(player.x, GAME_WIDTH - player.width));
+    player.y = Math.max(GAME_HEIGHT * 0.4, Math.min(player.y, GAME_HEIGHT - player.height));
+  }
+
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    bullets[i].y -= bullets[i].speed;
+    if (bullets[i].y + bullets[i].height < 0) bullets.splice(i, 1);
+  }
+
+  for (let i = words.length - 1; i >= 0; i--) {
+    const word = words[i];
+
+    if (word.glitching) {
+      word.glitchFrame++;
+      if (word.glitchFrame > 12) {
+        removeWordElement(word);
+        words.splice(i, 1);
+      }
+      continue;
+    }
+
+    word.prevX = word.x;
+    word.prevY = word.y;
+    word.x += word.vx;
+    word.y += word.vy;
+
+    let bulletHit = false;
+    for (let j = bullets.length - 1; j >= 0; j--) {
+      if (rectsOverlap(bullets[j], getWordHitbox(word))) {
+        bulletHit = true;
+        bullets.splice(j, 1);
+        word.glitching = true;
+        word.glitchFrame = 0;
+        score += POINTS_PER_HIT;
+        updateScoreDisplay();
+        checkWin();
+        break;
+      }
+    }
+
+    if (bulletHit) continue;
+
+    if (!player.destroyed && wordHitsShip(word)) {
+      removeWordElement(word);
+      words.splice(i, 1);
+      triggerShipDestroyed();
+      continue;
+    }
+
+    if (isWordOffScreen(word)) {
+      removeWordElement(word);
+      words.splice(i, 1);
+    }
+  }
+
+  wordSpawnRate++;
+  const spawnInterval = Math.max(50, 120 - score / 20);
+  if (wordSpawnRate > spawnInterval) {
+    spawnWord();
+    wordSpawnRate = 0;
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  if (gameRunning && !endScreenMode) {
+    ensureShipMedia();
+    drawBullets();
+    syncWordElements();
+    drawPlayer();
+  }
+
+  update();
+  requestAnimationFrame(draw);
+}
+
+function startGame({ reloadShip = false } = {}) {
+  if (document.activeElement && document.activeElement.blur) {
+    document.activeElement.blur();
+  }
+  pendingGameOver = false;
+  gameRunning = true;
+  gamePaused = false;
+  endScreenMode = null;
+  score = 0;
+  lives = MAX_LIVES;
+  player.destroyed = false;
+  player.x = GAME_WIDTH / 2 - SHIP_W / 2;
+  player.y = GAME_HEIGHT - SHIP_H - 40;
+  player.width = SHIP_W;
+  player.height = SHIP_H;
+  bullets = [];
+  clearAllWords();
+  wordSpawnRate = 0;
+  wordLayer.classList.add('active');
+  hideEndScreen();
+  gameUI.classList.add('visible');
+  pauseDialogOpen = false;
+  pauseOverlay.classList.remove('visible');
+  resetPauseDialogButtons();
+  countdownOverlay.style.display = 'none';
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  updateScoreDisplay();
+  updateLivesDisplay();
+  musicBtnImg.src = musicMuted ? 'Music Off.png' : 'Music On.png';
+  pauseBtnImg.src = 'White Option Button.png';
+  startShipVideo({ reload: reloadShip });
+}
+
+initShipVideos();
+
+const gameOverVideoPreload = document.createElement('video');
+gameOverVideoPreload.preload = 'auto';
+gameOverVideoPreload.src = GAME_OVER_VIDEO;
+gameOverVideoPreload.load();
+
+document.fonts.load(SENTENCE_FONT).catch(() => {}).finally(() => draw());
+document.fonts.load('18pt "Arabixel Basic", monospace').catch(() => {});
+</script>
+
+</body>
+</html>
